@@ -5,12 +5,12 @@
 #include <DHT.h>
 
 /// KONFIGURACJA SIECI WIFI ORAZ PROTOKOLU MQTT ///
-#define wifi_ssid "2.4G-Vectra-WiFi-25F506"  // Nazwa sieci
-#define wifi_password "01555171" // Haslo sieci
+#define wifi_ssid "XXXX"  // Nazwa sieci
+#define wifi_password "XXXX" // Haslo sieci
 
-#define mqtt_server "192.168.0.26" // ip serwera (lokalne)
-#define mqtt_user "homeassistant" // Nazwa uzytkownika MQTT
-#define mqtt_password "ree0iF3phoo6cei7eexie0aixeVooP2aakiejeipaibei4eweiDahno1Thaipool" // Haslo uzytkownika MQTT
+#define mqtt_server "XXXX" // ip serwera (lokalne)
+#define mqtt_user "XXXXXt" // Nazwa uzytkownika MQTT
+#define mqtt_password "XXXXX" // Haslo uzytkownika MQTT
 ///////////////////////////////////////////////////
 
 /// DEFINIOWANIE TEMATOW DO PROTOKOLU MQTT ///
@@ -83,10 +83,7 @@ void reconnect() {
   }
 }
 
-bool checkBound(float newValue, float prevValue, float maxDiff) {
-  return !isnan(newValue) &&
-         (newValue < prevValue - maxDiff || newValue > prevValue + maxDiff); // Dane zostana wyslane tylko wtedy, gdy roznica pomiarow bedzie wystarczajaco duza, w finalnej wersji beda wysylane wszystkie dane
-}
+
 
 long lastMsg = 0;
 float temp = 0.0;
