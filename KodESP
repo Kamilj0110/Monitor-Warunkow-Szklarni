@@ -1,0 +1,215 @@
+
+/// NIEZBEDNE BIBLIOTEKI
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
+#include <DHT.h>
+
+/// KONFIGURACJA SIECI WIFI ORAZ PROTOKOLU MQTT ///
+#define wifi_ssid "2.4G-Vectra-WiFi-25F506"  // Nazwa sieci
+#define wifi_password "01555171" // Haslo sieci
+
+#define mqtt_server "192.168.0.26" // ip serwera (lokalne)
+#define mqtt_user "homeassistant" // Nazwa uzytkownika MQTT
+#define mqtt_password "ree0iF3phoo6cei7eexie0aixeVooP2aakiejeipaibei4eweiDahno1Thaipool" // Haslo uzytkownika MQTT
+///////////////////////////////////////////////////
+
+/// DEFINIOWANIE TEMATOW DO PROTOKOLU MQTT ///
+#define humidity_topic "sensor/humidity"
+#define temperature_topic "sensor/temperature"
+#define humidity_topic2 "sensor/humidity2"
+#define humidity_topic3 "sensor/humidity3"
+#define humidity_topic4 "sensor/humidity4"
+#define humidity_topic5 "sensor/humidity5"
+//////////////////////////////////////////////
+
+/// DEFINIOWANIE PINOW ///
+#define DHTTYPE DHT22
+#define DHTPIN  4
+#define ChannelA 12
+#define ChannelB 13
+#define ChannelC 14
+#define ChannelInh 5
+/////////////////////////
+WiFiClient espClient;
+
+PubSubClient client(espClient);
+DHT dht(DHTPIN, DHTTYPE, 11); 
+
+void setup() {
+  pinMode(ChannelInh, OUTPUT);
+  pinMode(ChannelA, OUTPUT);
+  pinMode(ChannelB, OUTPUT);
+  pinMode(ChannelC, OUTPUT); /// Ustawienie pinow do wysterowania multipleksera na wyjscie
+  Serial.begin(115200);
+  dht.begin();
+  setup_wifi();
+  client.setServer(mqtt_server, 1883); /// wstepne polaczenie z serverem MQTT
+}
+
+void setup_wifi() {
+  delay(10);
+
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(wifi_ssid);
+
+  WiFi.begin(wifi_ssid, wifi_password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+}
+
+void reconnect() {
+
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+
+    if (client.connect("ESP8266Client", mqtt_user, mqtt_password)) {
+      Serial.println("connected");
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+
+      delay(5000);
+    }
+  }
+}
+
+bool checkBound(float newValue, float prevValue, float maxDiff) {
+  return !isnan(newValue) &&
+         (newValue < prevValue - maxDiff || newValue > prevValue + maxDiff); // Dane zostana wyslane tylko wtedy, gdy roznica pomiarow bedzie wystarczajaco duza, w finalnej wersji beda wysylane wszystkie dane
+}
+
+long lastMsg = 0;
+float temp = 0.0;
+float hum = 0.0;
+float diff = 0.5;
+int sensorValue2 = 0;
+int sensorValue3 = 0;
+int sensorValue4 = 0;
+int sensorValue5 = 0;
+float hum2 = 0.0;
+float hum3 = 0.0;
+float hum4 = 0.0;
+float hum5 = 0.0;
+
+void loop() {
+  
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+  
+  
+
+    float newTemp = dht.readTemperature();
+    float newHum = dht.readHumidity();
+
+  //czujnik channel 0
+    digitalWrite(ChannelA,LOW);
+    delay(1000);
+    digitalWrite(ChannelB,LOW);
+    delay(1000);
+    digitalWrite(ChannelC,LOW);
+    delay(1000);
+    digitalWrite(ChannelInh,LOW);
+    delay(1000);
+    sensorValue2 = analogRead(A0);
+    delay(100);
+    hum2 = 100 - sensorValue2/10.23;
+    if(hum2 < 0 )
+    {
+       hum2 = 0;
+       client.publish(humidity_topic2, String("Czujnik nie jest w glebie - 0").c_str(), true);
+      
+       
+    }else {
+      Serial.print("Channel 0:");
+      Serial.println(String(hum2).c_str());
+      client.publish(humidity_topic2, String(hum2).c_str(), true);
+    }
+    delay(1000);
+//czujnik channel 1
+    digitalWrite(ChannelA,HIGH);
+    delay(1000);
+    digitalWrite(ChannelB,LOW);
+    delay(1000);
+    digitalWrite(ChannelC,LOW);
+    delay(1000);
+    digitalWrite(ChannelInh,LOW);
+    delay(1000);
+    sensorValue3 = analogRead(A0);
+    delay(500);
+    hum3 = 100 - sensorValue3/10.23;
+    if(hum3 < 0 )
+    {
+       hum3 = 0;
+       client.publish(humidity_topic3, String("Czujnik nie jest w glebie - 0").c_str(), true);
+
+       
+    }else {
+      Serial.print("Channel 1:");
+      Serial.println(String(hum3).c_str());
+      client.publish(humidity_topic3, String(hum3).c_str(), true);
+    }
+
+    
+    //czujnik channel 2
+    digitalWrite(ChannelA,LOW);
+    delay(1000);
+    digitalWrite(ChannelB,HIGH);
+    delay(1000);
+    digitalWrite(ChannelC,LOW);
+    delay(1000);
+    digitalWrite(ChannelInh,LOW);
+    delay(1000);
+    sensorValue4 = analogRead(A0);
+    delay(500);
+    hum4 = 100 - sensorValue4/10.23;
+    if(hum4 < 0 )
+    {
+       hum4 = 0;
+       client.publish(humidity_topic4, String("Czujnik nie jest w glebie - 0").c_str(), true);
+
+       
+    }else {
+      Serial.print("Channel 2:");
+      Serial.println(String(hum4).c_str());
+      client.publish(humidity_topic4, String(hum4).c_str(), true);
+    }
+    //czujnik channel 3
+    digitalWrite(ChannelA,HIGH);
+    delay(1000);
+    digitalWrite(ChannelB,HIGH);
+    delay(1000);
+    digitalWrite(ChannelC,LOW);
+    delay(1000);
+    digitalWrite(ChannelInh,LOW);
+    delay(1000);
+    sensorValue5 = analogRead(A0);
+    delay(500);
+    hum5 = 100 - sensorValue5/10.23;
+    if(hum5 < 0 )
+    {
+       hum5 = 0;
+       client.publish(humidity_topic5, String("Czujnik nie jest w glebie - 0").c_str(), true);
+
+       
+    }else {
+      client.publish(humidity_topic5, String(hum5).c_str(), true);
+      Serial.print("Channel 3:");
+      Serial.println(String(hum5).c_str());
+      }
+    
+    
+    delay(3000);
+  ESP.deepSleep(60000000);
+}
